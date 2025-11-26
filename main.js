@@ -11176,30 +11176,3 @@ const safeStorage = {
                 }, 300);
             }
         }
-
-// Add this function to auto-refresh user management
-function startUserManagementAutoRefresh() {
-    setInterval(() => {
-        if (document.getElementById('users-table-body')) {
-            loadAdminUsers();
-        }
-    }, 3000); // Refresh every 3 seconds
-}
-
-// Call this when admin dashboard loads
-function showAdminDashboard() {
-    document.getElementById('login-container').style.display = 'none';
-    document.getElementById('user-dashboard').style.display = 'none';
-    document.getElementById('admin-dashboard').style.display = 'block';
-    
-    document.getElementById('admin-username-display').textContent = db.currentUser.username;
-    loadPendingTransactions();
-    loadAdminStats();
-    initRewardsSystem();
-    
-    // Start auto-refresh for user management
-    startUserManagementAutoRefresh();
-    
-    // Load users immediately
-    setTimeout(() => loadAdminUsers(), 500);
-}
