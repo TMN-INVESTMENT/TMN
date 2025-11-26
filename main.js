@@ -11203,32 +11203,3 @@ function showAdminDashboard() {
     // Load users immediately
     setTimeout(() => loadAdminUsers(), 500);
 }
-
-// Debug function to check users
-function debugUsers() {
-    const users = db.getUsers();
-    console.log('=== DEBUG USERS ===');
-    console.log('Total users:', users.length);
-    console.log('Users in database:', users);
-    console.log('LocalStorage keys:', Object.keys(localStorage));
-    
-    // Show in alert for quick check
-    let userList = 'Users in database:\n\n';
-    users.forEach(user => {
-        userList += `ID: ${user.id} | Username: ${user.username} | Email: ${user.email} | Status: ${user.status}\n`;
-    });
-    alert(userList);
-}
-
-// Add this button to your admin panel temporarily
-function addDebugButton() {
-    const adminPanel = document.querySelector('.admin-panel');
-    if (adminPanel) {
-        const debugBtn = document.createElement('button');
-        debugBtn.textContent = 'Debug Users';
-        debugBtn.onclick = debugUsers;
-        debugBtn.style.background = '#e74c3c';
-        debugBtn.style.margin = '10px';
-        adminPanel.insertBefore(debugBtn, adminPanel.firstChild);
-    }
-}
