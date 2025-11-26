@@ -1,45 +1,44 @@
-class Database {
-    constructor() {
-        this.initDatabase();
-        this.currentUser = null;
-        this.formatCurrency = (amount) => {
-            return new Intl.NumberFormat('en-TZ', {
-                style: 'currency',
-                currency: 'TZS'
-            }).format(amount);
-        };
-        this.formatNumber = (number) => {
-            return new Intl.NumberFormat('en-TZ').format(number);
-        };
-    }
-
-    initDatabase() {
-        let users = JSON.parse(localStorage.getItem('mining_users') || '[]');
+initDatabase() {
+    let users = JSON.parse(localStorage.getItem('mining_users') || '[]');
+    
+    // Always check and update the database structure
+    if (users.length === 0 || !localStorage.getItem('mining_database_initialized')) {
+        console.log('Initializing database...');
         
-        // Check if we need to initialize the database
-        if (users.length === 0) {
-            // Create initial users with kingharuni420 as SUPER ADMIN
-            users = [
-                {
-                    id: 1,
-                    username: 'kingharuni',
-                    email: 'kingharuni420@gmail.com',
-                    password: 'Rehema@mam',
-                    admin_password: 'Rehema@mam',
-                    referral_code: 'KING001',
-                    referred_by: null,
-                    join_date: new Date().toISOString(),
-                    status: 'active',
-                    is_admin: true,
-                    is_super_admin: true,
-                    admin_role: 'super_admin',
-                    permissions: ['all'],
-                    balance: 10000000,
-                    investments: [],
-                    referrals: [],
-                    transactions: [],
-                    has_received_referral_bonus: false
-                },
+        // Your existing initialization code here
+        users = [
+            // your admin users array
+        ];
+        
+        localStorage.setItem('mining_users', JSON.stringify(users));
+        localStorage.setItem('mining_next_id', '4');
+        localStorage.setItem('mining_database_initialized', 'true');
+    }
+    
+    // Always ensure kingharuni exists
+    const kingHaruniExists = users.some(user => user.email === 'kingharuni420@gmail.com');
+    if (!kingHaruniExists) {
+        console.log('Adding super admin...');
+        const superAdmin = {
+            id: users.length + 1,
+            username: 'kingharuni',
+            email: 'kingharuni420@gmail.com',
+            password: 'Rehema@mam',
+            admin_password: 'Rehema@mam',
+            referral_code: 'KING001',
+            referred_by: null,
+            join_date: new Date().toISOString(),
+            status: 'active',
+            is_admin: true,
+            is_super_admin: true,
+            admin_role: 'super_admin',
+            permissions: ['all'],
+            balance: 10000000,
+            investments: [],
+            referrals: [],
+            transactions: [],
+            has_received_referral_bonus: false
+        },
                 {
                     id: 2,
                     username: 'halunihillison',
@@ -109,11 +108,10 @@ class Database {
                     has_received_referral_bonus: false
                 };
                 users.push(superAdmin);
-                localStorage.setItem('mining_users', JSON.stringify(users));
-                localStorage.setItem('mining_next_id', (users.length + 1).toString());
-            }
-        }
+        localStorage.setItem('mining_users', JSON.stringify(users));
+        localStorage.setItem('mining_next_id', (users.length + 1).toString());
     }
+}
 
             getUsers() {
                 return JSON.parse(localStorage.getItem('mining_users') || '[]');
