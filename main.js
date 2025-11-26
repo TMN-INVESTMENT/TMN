@@ -4807,7 +4807,7 @@ function loadEnhancedReferrals() {
     // Update referral code display
     document.getElementById('user-referral-code-display').textContent = db.currentUser.referral_code;
     document.getElementById('referral-link-text').textContent = 
-        `https://tanzania-mining.com/register?ref=${db.currentUser.referral_code}`;
+        `tmn-investment-mn6p.vercel.app/register?ref=${db.currentUser.referral_code}`;
     
     // Populate referrals table
     populateReferralsTable(userReferrals);
