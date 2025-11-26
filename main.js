@@ -1,44 +1,45 @@
-initDatabase() {
-    let users = JSON.parse(localStorage.getItem('mining_users') || '[]');
-    
-    // Always check and update the database structure
-    if (users.length === 0 || !localStorage.getItem('mining_database_initialized')) {
-        console.log('Initializing database...');
-        
-        // Your existing initialization code here
-        users = [
-            // your admin users array
-        ];
-        
-        localStorage.setItem('mining_users', JSON.stringify(users));
-        localStorage.setItem('mining_next_id', '4');
-        localStorage.setItem('mining_database_initialized', 'true');
+class Database {
+    constructor() {
+        this.initDatabase();
+        this.currentUser = null;
+        this.formatCurrency = (amount) => {
+            return new Intl.NumberFormat('en-TZ', {
+                style: 'currency',
+                currency: 'TZS'
+            }).format(amount);
+        };
+        this.formatNumber = (number) => {
+            return new Intl.NumberFormat('en-TZ').format(number);
+        };
     }
-    
-    // Always ensure kingharuni exists
-    const kingHaruniExists = users.some(user => user.email === 'kingharuni420@gmail.com');
-    if (!kingHaruniExists) {
-        console.log('Adding super admin...');
-        const superAdmin = {
-            id: users.length + 1,
-            username: 'kingharuni',
-            email: 'kingharuni420@gmail.com',
-            password: 'Rehema@mam',
-            admin_password: 'Rehema@mam',
-            referral_code: 'KING001',
-            referred_by: null,
-            join_date: new Date().toISOString(),
-            status: 'active',
-            is_admin: true,
-            is_super_admin: true,
-            admin_role: 'super_admin',
-            permissions: ['all'],
-            balance: 10000000,
-            investments: [],
-            referrals: [],
-            transactions: [],
-            has_received_referral_bonus: false
-        },
+
+    initDatabase() {
+        let users = JSON.parse(localStorage.getItem('mining_users') || '[]');
+        
+        // Check if we need to initialize the database
+        if (users.length === 0) {
+            // Create initial users with kingharuni420 as SUPER ADMIN
+            users = [
+                {
+                    id: 1,
+                    username: 'kingharuni',
+                    email: 'kingharuni420@gmail.com',
+                    password: 'Rehema@mam',
+                    admin_password: 'Rehema@mam',
+                    referral_code: 'KING001',
+                    referred_by: null,
+                    join_date: new Date().toISOString(),
+                    status: 'active',
+                    is_admin: true,
+                    is_super_admin: true,
+                    admin_role: 'super_admin',
+                    permissions: ['all'],
+                    balance: 10000000,
+                    investments: [],
+                    referrals: [],
+                    transactions: [],
+                    has_received_referral_bonus: false
+                },
                 {
                     id: 2,
                     username: 'halunihillison',
@@ -108,65 +109,66 @@ initDatabase() {
                     has_received_referral_bonus: false
                 };
                 users.push(superAdmin);
-        localStorage.setItem('mining_users', JSON.stringify(users));
-        localStorage.setItem('mining_next_id', (users.length + 1).toString());
-    }
-}
-
-            getUsers() {
-                return JSON.parse(localStorage.getItem('mining_users') || '[]');
-            }
-
-            saveUsers(users) {
                 localStorage.setItem('mining_users', JSON.stringify(users));
+                localStorage.setItem('mining_next_id', (users.length + 1).toString());
             }
+        }
+    }
 
-            getNextId() {
-                const nextId = parseInt(localStorage.getItem('mining_next_id') || '1');
-                localStorage.setItem('mining_next_id', (nextId + 1).toString());
-                return nextId;
-            }
+    getUsers() {
+        return JSON.parse(localStorage.getItem('mining_users') || '[]');
+    }
 
-            findUserByEmailOrUsername(identifier) {
-                const users = this.getUsers();
-                return users.find(user => 
-                    user.email === identifier || user.username === identifier
-                );
+    saveUsers(users) {
+        localStorage.setItem('mining_users', JSON.stringify(users));
+    }
+
+    getNextId() {
+        const nextId = parseInt(localStorage.getItem('mining_next_id') || '1');
+        localStorage.setItem('mining_next_id', (nextId + 1).toString());
+        return nextId;
+    }
+
+    findUserByEmailOrUsername(identifier) {
+        const users = this.getUsers();
+        return users.find(user => 
+            user.email === identifier || user.username === identifier
+        );
+    }
+    
+    findUserById(id) {
+        const users = this.getUsers();
+        return users.find(user => user.id === id);
+    }
+
+    updateUserProfilePicture(userId, pictureData) {
+        const users = this.getUsers();
+        const userIndex = users.findIndex(user => user.id === userId);
+        
+        if (userIndex !== -1) {
+            users[userIndex].profile_picture = pictureData;
+            this.saveUsers(users);
+            
+            // Update current user if it's the same user
+            if (this.currentUser && this.currentUser.id === userId) {
+                this.currentUser.profile_picture = pictureData;
             }
             
-            findUserById(id) {
-                const users = this.getUsers();
-                return users.find(user => user.id === id);
-            }
+            return true;
+        }
+        
+        return false;
+    }
 
-            updateUserProfilePicture(userId, pictureData) {
-                const users = this.getUsers();
-                const userIndex = users.findIndex(user => user.id === userId);
-                
-                if (userIndex !== -1) {
-                    users[userIndex].profile_picture = pictureData;
-                    this.saveUsers(users);
-                    
-                    // Update current user if it's the same user
-                    if (this.currentUser && this.currentUser.id === userId) {
-                        this.currentUser.profile_picture = pictureData;
-                    }
-                    
-                    return true;
-                }
-                
-                return false;
-            }
+    findUserByReferralCode(referralCode) {
+        const users = this.getUsers();
+        return users.find(user => user.referral_code === referralCode);
+    }
 
-            findUserByReferralCode(referralCode) {
-                const users = this.getUsers();
-                return users.find(user => user.referral_code === referralCode);
-            }
-
-            getUsersByReferrer(referralCode) {
-                const users = this.getUsers();
-                return users.filter(user => user.referred_by === referralCode);
-            }
+    getUsersByReferrer(referralCode) {
+        const users = this.getUsers();
+        return users.filter(user => user.referred_by === referralCode);
+    }
 
     // Add method to check if user is super admin
     isSuperAdmin(user) {
@@ -215,267 +217,262 @@ initDatabase() {
         );
     }
 
-
     createUser(userData) {
-    const users = this.getUsers();
-    const newUser = {
-        id: this.getNextId(),
-        ...userData,
-        join_date: new Date().toISOString(),
-        status: 'active',
-        is_admin: false,
-        balance: 0,
-        investments: [],
-        referrals: [],
-        transactions: [],
-        has_received_referral_bonus: false
-    };
-    
-    users.push(newUser);
-    this.saveUsers(users);
-    
-    console.log('New user created:', newUser);
-    console.log('Total users now:', users.length);
-    
-    return newUser;
+        const users = this.getUsers();
+        const newUser = {
+            id: this.getNextId(),
+            ...userData,
+            join_date: new Date().toISOString(),
+            status: 'active',
+            is_admin: false,
+            balance: 0,
+            investments: [],
+            referrals: [],
+            transactions: [],
+            has_received_referral_bonus: false
+        };
+        users.push(newUser);
+        this.saveUsers(users);
+        return newUser;
     }
+
+    getTotalUsers() {
+        return this.getUsers().length;
+    }
+
+    getTodaySignups() {
+        const users = this.getUsers();
+        const today = new Date().toDateString();
+        return users.filter(user => {
+            const userDate = new Date(user.join_date).toDateString();
+            return userDate === today;
+        }).length;
+    }  
+
+    // Transaction methods
+    createTransaction(userId, type, amount, method, details = {}) {
+        const users = this.getUsers();
+        const user = users.find(u => u.id === userId);
         
-            getTotalUsers() {
-                return this.getUsers().length;
-            }
-
-            getTodaySignups() {
-                const users = this.getUsers();
-                const today = new Date().toDateString();
-                return users.filter(user => {
-                    const userDate = new Date(user.join_date).toDateString();
-                    return userDate === today;
-                }).length;
-            }  
-
-            // Transaction methods
-            createTransaction(userId, type, amount, method, details = {}) {
-                const users = this.getUsers();
-                const user = users.find(u => u.id === userId);
-                
-                if (!user) return null;
-                
-                const transaction = {
-                    id: this.getNextTransactionId(),
-                    userId: userId,
-                    username: user.username,
-                    type: type, // 'deposit' or 'withdrawal'
-                    amount: amount,
-                    method: method,
-                    status: 'pending', // 'pending', 'approved', 'rejected'
-                    date: new Date().toISOString(),
-                    details: details,
-                    adminActionDate: null,
-                    adminId: null
-                };
-                
-                // Initialize transactions array if it doesn't exist
-                if (!user.transactions) {
-                    user.transactions = [];
-                }
-                
-                user.transactions.push(transaction);
-                this.saveUsers(users);
-                
-                return transaction;
-            }
-            
-            // Get next transaction ID
-            getNextTransactionId() {
-                let nextId = localStorage.getItem('mining_next_transaction_id');
-                if (!nextId) {
-                    nextId = 1;
-                } else {
-                    nextId = parseInt(nextId) + 1;
-                }
-                localStorage.setItem('mining_next_transaction_id', nextId.toString());
-                return nextId;
-            }
-            
-            // Get all pending transactions (for admin)
-            getPendingTransactions() {
-                const users = this.getUsers();
-                const pendingTransactions = [];
-                
-                users.forEach(user => {
-                    if (user.transactions) {
-                        user.transactions.forEach(transaction => {
-                            if (transaction.status === 'pending') {
-                                pendingTransactions.push({
-                                    ...transaction,
-                                    username: user.username,
-                                    email: user.email
-                                });
-                            }
+        if (!user) return null;
+        
+        const transaction = {
+            id: this.getNextTransactionId(),
+            userId: userId,
+            username: user.username,
+            type: type, // 'deposit' or 'withdrawal'
+            amount: amount,
+            method: method,
+            status: 'pending', // 'pending', 'approved', 'rejected'
+            date: new Date().toISOString(),
+            details: details,
+            adminActionDate: null,
+            adminId: null
+        };
+        
+        // Initialize transactions array if it doesn't exist
+        if (!user.transactions) {
+            user.transactions = [];
+        }
+        
+        user.transactions.push(transaction);
+        this.saveUsers(users);
+        
+        return transaction;
+    }
+    
+    // Get next transaction ID
+    getNextTransactionId() {
+        let nextId = localStorage.getItem('mining_next_transaction_id');
+        if (!nextId) {
+            nextId = 1;
+        } else {
+            nextId = parseInt(nextId) + 1;
+        }
+        localStorage.setItem('mining_next_transaction_id', nextId.toString());
+        return nextId;
+    }
+    
+    // Get all pending transactions (for admin)
+    getPendingTransactions() {
+        const users = this.getUsers();
+        const pendingTransactions = [];
+        
+        users.forEach(user => {
+            if (user.transactions) {
+                user.transactions.forEach(transaction => {
+                    if (transaction.status === 'pending') {
+                        pendingTransactions.push({
+                            ...transaction,
+                            username: user.username,
+                            email: user.email
                         });
                     }
                 });
-                
-                return pendingTransactions;
             }
-            
-            // Get all transactions (for admin)
-            getAllTransactions() {
-                const users = this.getUsers();
-                const allTransactions = [];
-                
-                users.forEach(user => {
-                    if (user.transactions) {
-                        user.transactions.forEach(transaction => {
-                            allTransactions.push({
-                                ...transaction,
-                                username: user.username,
-                                email: user.email
-                            });
-                        });
-                    }
+        });
+        
+        return pendingTransactions;
+    }
+    
+    // Get all transactions (for admin)
+    getAllTransactions() {
+        const users = this.getUsers();
+        const allTransactions = [];
+        
+        users.forEach(user => {
+            if (user.transactions) {
+                user.transactions.forEach(transaction => {
+                    allTransactions.push({
+                        ...transaction,
+                        username: user.username,
+                        email: user.email
+                    });
                 });
-                
-                // Sort by date (newest first)
-                return allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
             }
-            
-            // Update transaction status (admin approval/rejection)
-            updateTransactionStatus(transactionId, status, adminId) {
-                const users = this.getUsers();
-                
-                for (let user of users) {
-                    if (user.transactions) {
-                        const transaction = user.transactions.find(t => t.id === transactionId);
-                        if (transaction) {
-                            const oldStatus = transaction.status;
-                            transaction.status = status;
-                            transaction.adminActionDate = new Date().toISOString();
-                            transaction.adminId = adminId;
-                            
-                            // Update user balance based on transaction type and status
-                            if (transaction.type === 'deposit' && status === 'approved') {
-                                user.balance += transaction.amount;
-                            } else if (transaction.type === 'withdrawal') {
-                                if (status === 'approved' && oldStatus === 'pending') {
-                                    // Amount was already deducted when withdrawal was requested
-                                    // No further action needed
-                                } else if (status === 'rejected' && oldStatus === 'pending') {
-                                    // Add back the deducted amount
-                                    user.balance += transaction.amount;
-                                }
-                            }
-                            
-                            this.saveUsers(users);
-                            return true;
+        });
+        
+        // Sort by date (newest first)
+        return allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+    
+    // Update transaction status (admin approval/rejection)
+    updateTransactionStatus(transactionId, status, adminId) {
+        const users = this.getUsers();
+        
+        for (let user of users) {
+            if (user.transactions) {
+                const transaction = user.transactions.find(t => t.id === transactionId);
+                if (transaction) {
+                    const oldStatus = transaction.status;
+                    transaction.status = status;
+                    transaction.adminActionDate = new Date().toISOString();
+                    transaction.adminId = adminId;
+                    
+                    // Update user balance based on transaction type and status
+                    if (transaction.type === 'deposit' && status === 'approved') {
+                        user.balance += transaction.amount;
+                    } else if (transaction.type === 'withdrawal') {
+                        if (status === 'approved' && oldStatus === 'pending') {
+                            // Amount was already deducted when withdrawal was requested
+                            // No further action needed
+                        } else if (status === 'rejected' && oldStatus === 'pending') {
+                            // Add back the deducted amount
+                            user.balance += transaction.amount;
                         }
                     }
-                }
-                
-                return false;
-            }
-            
-            // Get user transactions
-            getUserTransactions(userId) {
-                const users = this.getUsers();
-                const user = users.find(u => u.id === userId);
-                
-                if (!user || !user.transactions) {
-                    return [];
-                }
-                
-                // Sort by date (newest first)
-                return user.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-            }
-            
-            // Process withdrawal request (deduct amount immediately)
-            processWithdrawalRequest(userId, amount) {
-                const users = this.getUsers();
-                const user = users.find(u => u.id === userId);
-                
-                if (!user) return false;
-                
-                if (user.balance < amount) {
-                    return false; // Insufficient balance
-                }
-                
-                user.balance -= amount;
-                this.saveUsers(users);
-                return true;
-            }
-            
-            // Check if user has withdrawn today
-            hasWithdrawnToday(userId) {
-                const user = this.getUsers().find(u => u.id === userId);
-                if (!user || !user.transactions) return false;
-                
-                const today = new Date().toDateString();
-                return user.transactions.some(t => {
-                    if (t.type === 'withdrawal' && t.status === 'approved') {
-                        const transactionDate = new Date(t.date).toDateString();
-                        return transactionDate === today;
-                    }
-                    return false;
-                });
-            }
-            
-            // Check if withdrawal is allowed at current time
-            isWithdrawalAllowed() {
-                const now = new Date();
-                const day = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-                const hour = now.getHours();
-                
-                // Monday to Friday: all hours allowed
-                if (day >= 1 && day <= 5) {
+                    
+                    this.saveUsers(users);
                     return true;
                 }
-                // Saturday and Sunday: 14:00 to 23:00
-                else if (day === 0 || day === 6) {
-                    return hour >= 14 && hour < 23;
-                }
-                
-                return false;
-            }
-            
-            // Get total deposits
-            getTotalDeposits() {
-                const users = this.getUsers();
-                let total = 0;
-                
-                users.forEach(user => {
-                    if (user.transactions) {
-                        user.transactions.forEach(transaction => {
-                            if (transaction.type === 'deposit' && transaction.status === 'approved') {
-                                total += transaction.amount;
-                            }
-                        });
-                    }
-                });
-                
-                return total;
-            }
-            
-            // Get total withdrawals
-            getTotalWithdrawals() {
-                const users = this.getUsers();
-                let total = 0;
-                
-                users.forEach(user => {
-                    if (user.transactions) {
-                        user.transactions.forEach(transaction => {
-                            if (transaction.type === 'withdrawal' && transaction.status === 'approved') {
-                                total += transaction.amount;
-                            }
-                        });
-                    }
-                });
-                
-                return total;
             }
         }
-                  
-        // Initialize database
-        const db = new Database();
+        
+        return false;
+    }
+    
+    // Get user transactions
+    getUserTransactions(userId) {
+        const users = this.getUsers();
+        const user = users.find(u => u.id === userId);
+        
+        if (!user || !user.transactions) {
+            return [];
+        }
+        
+        // Sort by date (newest first)
+        return user.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+    
+    // Process withdrawal request (deduct amount immediately)
+    processWithdrawalRequest(userId, amount) {
+        const users = this.getUsers();
+        const user = users.find(u => u.id === userId);
+        
+        if (!user) return false;
+        
+        if (user.balance < amount) {
+            return false; // Insufficient balance
+        }
+        
+        user.balance -= amount;
+        this.saveUsers(users);
+        return true;
+    }
+    
+    // Check if user has withdrawn today
+    hasWithdrawnToday(userId) {
+        const user = this.getUsers().find(u => u.id === userId);
+        if (!user || !user.transactions) return false;
+        
+        const today = new Date().toDateString();
+        return user.transactions.some(t => {
+            if (t.type === 'withdrawal' && t.status === 'approved') {
+                const transactionDate = new Date(t.date).toDateString();
+                return transactionDate === today;
+            }
+            return false;
+        });
+    }
+    
+    // Check if withdrawal is allowed at current time
+    isWithdrawalAllowed() {
+        const now = new Date();
+        const day = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+        const hour = now.getHours();
+        
+        // Monday to Friday: all hours allowed
+        if (day >= 1 && day <= 5) {
+            return true;
+        }
+        // Saturday and Sunday: 14:00 to 23:00
+        else if (day === 0 || day === 6) {
+            return hour >= 14 && hour < 23;
+        }
+        
+        return false;
+    }
+    
+    // Get total deposits
+    getTotalDeposits() {
+        const users = this.getUsers();
+        let total = 0;
+        
+        users.forEach(user => {
+            if (user.transactions) {
+                user.transactions.forEach(transaction => {
+                    if (transaction.type === 'deposit' && transaction.status === 'approved') {
+                        total += transaction.amount;
+                    }
+                });
+            }
+        });
+        
+        return total;
+    }
+    
+    // Get total withdrawals
+    getTotalWithdrawals() {
+        const users = this.getUsers();
+        let total = 0;
+        
+        users.forEach(user => {
+            if (user.transactions) {
+                user.transactions.forEach(transaction => {
+                    if (transaction.type === 'withdrawal' && transaction.status === 'approved') {
+                        total += transaction.amount;
+                    }
+                });
+            }
+        });
+        
+        return total;
+    }
+}
+
+// Initialize database
+const db = new Database();
+
 
 // Chat Manager yenye utendaji wote
 class ChatManager {
@@ -627,55 +624,7 @@ class ChatManager {
             this.updateStorageInfo();
             showNotification('Chat history cleared successfully!', 'success');
         }
-    }
-    
-    updateStorageInfo() {
-        const storageInfo = document.getElementById('storageInfo');
-        if (!storageInfo) return;
-        
-        try {
-            const used = JSON.stringify(localStorage).length;
-            const max = 5 * 1024 * 1024; // 5MB limit
-            const percent = Math.min((used / max * 100), 100).toFixed(1);
-            
-            storageInfo.textContent = `Storage: ${percent}% used`;
-            storageInfo.className = `storage-info ${percent > 80 ? 'warning' : ''}`;
-            
-        } catch (error) {
-            storageInfo.textContent = 'Storage: Unable to calculate';
-        }
-    }
-}
 
-// Initialize chat manager
-let chatManager;
-
-// Function ya kuanzisha chat
-function initializeChat() {
-    chatManager = new ChatManager();
-}
-
-// Function ya kufuta chat history
-function clearChatHistory() {
-    if (chatManager) {
-        chatManager.clearHistory();
-    } else {
-        // Fallback kama chatManager haijaanzishwa
-        localStorage.removeItem('chat_messages');
-        showNotification('Chat history cleared!', 'success');
-        
-        // Reload messages ikiwa kuna display
-        const chatMessages = document.querySelector('.chat-messages');
-        if (chatMessages) {
-            chatMessages.innerHTML = '';
-        }
-    }
-}
-
-// Anza chat system wakati ukurasa unapopakiwa
-document.addEventListener('DOMContentLoaded', function() {
-    initializeChat();
-});
 
 // Chat System Class
 class ChatSystem {
