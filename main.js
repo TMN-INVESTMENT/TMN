@@ -215,25 +215,31 @@ initDatabase() {
         );
     }
 
-            createUser(userData) {
-                const users = this.getUsers();
-                const newUser = {
-                    id: this.getNextId(),
-                    ...userData,
-                    join_date: new Date().toISOString(),
-                    status: 'active',
-                    is_admin: false,
-                    balance: 0,
-                    investments: [],
-                    referrals: [],
-                    transactions: [],
-                    has_received_referral_bonus: false
-                };
-                users.push(newUser);
-                this.saveUsers(users);
-                return newUser;
-            }
 
+    createUser(userData) {
+    const users = this.getUsers();
+    const newUser = {
+        id: this.getNextId(),
+        ...userData,
+        join_date: new Date().toISOString(),
+        status: 'active',
+        is_admin: false,
+        balance: 0,
+        investments: [],
+        referrals: [],
+        transactions: [],
+        has_received_referral_bonus: false
+    };
+    
+    users.push(newUser);
+    this.saveUsers(users);
+    
+    console.log('New user created:', newUser);
+    console.log('Total users now:', users.length);
+    
+    return newUser;
+    }
+        
             getTotalUsers() {
                 return this.getUsers().length;
             }
@@ -11170,3 +11176,59 @@ const safeStorage = {
                 }, 300);
             }
         }
+
+// Add this function to auto-refresh user management
+function startUserManagementAutoRefresh() {
+    setInterval(() => {
+        if (document.getElementById('users-table-body')) {
+            loadAdminUsers();
+        }
+    }, 3000); // Refresh every 3 seconds
+}
+
+// Call this when admin dashboard loads
+function showAdminDashboard() {
+    document.getElementById('login-container').style.display = 'none';
+    document.getElementById('user-dashboard').style.display = 'none';
+    document.getElementById('admin-dashboard').style.display = 'block';
+    
+    document.getElementById('admin-username-display').textContent = db.currentUser.username;
+    loadPendingTransactions();
+    loadAdminStats();
+    initRewardsSystem();
+    
+    // Start auto-refresh for user management
+    startUserManagementAutoRefresh();
+    
+    // Load users immediately
+    setTimeout(() => loadAdminUsers(), 500);
+}
+
+// Debug function to check users
+function debugUsers() {
+    const users = db.getUsers();
+    console.log('=== DEBUG USERS ===');
+    console.log('Total users:', users.length);
+    console.log('Users in database:', users);
+    console.log('LocalStorage keys:', Object.keys(localStorage));
+    
+    // Show in alert for quick check
+    let userList = 'Users in database:\n\n';
+    users.forEach(user => {
+        userList += `ID: ${user.id} | Username: ${user.username} | Email: ${user.email} | Status: ${user.status}\n`;
+    });
+    alert(userList);
+}
+
+// Add this button to your admin panel temporarily
+function addDebugButton() {
+    const adminPanel = document.querySelector('.admin-panel');
+    if (adminPanel) {
+        const debugBtn = document.createElement('button');
+        debugBtn.textContent = 'Debug Users';
+        debugBtn.onclick = debugUsers;
+        debugBtn.style.background = '#e74c3c';
+        debugBtn.style.margin = '10px';
+        adminPanel.insertBefore(debugBtn, adminPanel.firstChild);
+    }
+}
